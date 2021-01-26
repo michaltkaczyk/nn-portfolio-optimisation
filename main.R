@@ -2,9 +2,9 @@ library(tidyverse)
 
 source("utils.R")
 
-funds <- list(
-    read_nn_csv("./historical-fund-data/NN_Akcji_(A)_1998-03-11_2021-01-07.txt"),
-    read_nn_csv("./historical-fund-data/NN_Obligacji_(A)_1999-02-25_2021-01-07.txt"))
+HISTORICAL_DATA_PATH <- "./historical-fund-data"
+
+funds <- list_nn_funds(HISTORICAL_DATA_PATH)
 
 min_date <- min(c(funds[[1]]$date, funds[[2]]$date))
 max_date <- max(c(funds[[1]]$date, funds[[2]]$date))

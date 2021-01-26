@@ -2,7 +2,8 @@ read_nn_csv <- function(file) {
     file %>% 
         read_csv() %>% 
         rename(date = Data) %>% 
-        select(-Waluta)
+        select(-Waluta) %>% 
+        pivot_longer(!date, "fund")
 }
 
 list_nn_funds <- function(path) {

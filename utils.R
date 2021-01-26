@@ -1,5 +1,6 @@
 read_nn_csv <- function(file) {
-    read_csv(file) %>% 
+    file %>% 
+        read(csv) %>% 
         rename(date = Data) %>% 
         select(-Waluta)
 }

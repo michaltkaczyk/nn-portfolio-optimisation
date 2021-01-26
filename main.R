@@ -1,10 +1,6 @@
 library(tidyverse)
 
-read_nn_csv <- function(file) {
-    read_csv(file) %>% 
-        rename(date = Data) %>% 
-        select(-Waluta)
-}
+source("utils.R")
 
 funds <- list(
     read_nn_csv("./historical-fund-data/NN_Akcji_(A)_1998-03-11_2021-01-07.txt"),

@@ -8,4 +8,8 @@ funds <- HISTORICAL_DATA_PATH %>%
     list_nn_funds() %>% 
     bind_rows()
 
-ggplot(funds, aes(x = date, y = value, color = fund)) + geom_line()
+ggplot(funds, aes(x = date, y = value, color = fund)) +
+    geom_line() +
+    ggtitle("NN Investment Funds") +
+    xlab("Time") +
+    ylab("Index")

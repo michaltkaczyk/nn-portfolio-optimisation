@@ -27,6 +27,8 @@ funds_data <- funds_data %>%
 
 ggplot(funds_data, aes(x = date, y = value, color = fund)) +
     geom_line() +
-    ggtitle(paste("NN Investment Funds Indices Between", START_DAY, "and", END_DAY)) +
+    labs(
+        title = paste("NN Funds Indices Between", START_DAY, "and", END_DAY),
+        caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
     xlab("Time") +
     ylab("Index")

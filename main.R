@@ -23,6 +23,6 @@ funds_data <- funds_data %>%
 
 ggplot(funds_data, aes(x = date, y = value, color = fund)) +
     geom_line() +
-    ggtitle("NN Investment Funds") +
+    ggtitle(paste("NN Investment Funds Indices Between", START_DAY, "and", END_DAY)) +
     xlab("Time") +
     ylab("Index")

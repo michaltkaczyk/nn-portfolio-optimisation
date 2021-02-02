@@ -10,7 +10,11 @@ END_DAY <-  ymd("2020-12-31")
 
 funds_data <- HISTORICAL_DATA_PATH %>% 
     list_nn_funds() %>% 
-    bind_rows()
+    bind_rows() %>% 
+    group_by(fund) %>% 
+    arrange(date, .by_group = TRUE) %>% 
+    mutate(value_pct_change = value/lag(value) - 1) %>% 
+    ungroup()
 
 funds_old_enough <- funds_data %>%
     group_by(fund) %>%

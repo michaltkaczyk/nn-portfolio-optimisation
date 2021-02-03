@@ -5,16 +5,29 @@ funds_data_xts <- funds_data %>%
     pivot_wider(names_from = fund, values_from = value_pct_change) %>% 
     tk_xts()
 
-portfolio_1_returns <- Return.portfolio(funds_data_xts, c(1/3, 1/3, 1/3))
-portfolio_2_returns <- Return.portfolio(funds_data_xts, c(1/4, 1/4, 2/4))
-portfolio_3_returns <- Return.portfolio(funds_data_xts, c(3/6, 2/6, 1/6))
+manual_portfolios <- rbind(
+    c(1, 0, 0, 0, 0),
+    c(1, 1, 0, 0, 0),
+    c(1, 0, 1, 0, 0),
+    c(1, 0, 0, 1, 0),
+    c(1, 0, 0, 0, 1),
+    c(1, 1, 1, 1, 1)) %>% 
+    apply(1, function(x) x / sum(x)) %>% 
+    t()
 
-portfolio_comparison <- data.frame(
-    date = index(portfolio_1_returns),
-    p1 = as.numeric(portfolio_1_returns),
-    p2 = as.numeric(portfolio_2_returns),
-    p3 = as.numeric(portfolio_3_returns)) %>%  
-    pivot_longer(!date, "portfolio") %>% 
+manual_portfolios_results <- list()
+
+for (portfolio in 1:NROW(manual_portfolios)) {
+    manual_portfolios_results[[portfolio]] <- 
+        Return.portfolio(funds_data_xts, manual_portfolios[portfolio, ]) %>%
+        as_tibble() %>% 
+        add_column(date = index(funds_data_xts)) %>% 
+        mutate(portfolio = paste("portfolio", portfolio)) %>% 
+        rename(value = portfolio.returns)
+}
+
+portfolio_comparison <- manual_portfolios_results %>%
+    bind_rows() %>% 
     group_by(portfolio) %>% 
     mutate(value = cumprod(value + 1) * 100)
 

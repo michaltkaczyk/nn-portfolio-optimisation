@@ -1,14 +1,26 @@
+---
+title: "nn-portfolio-optimisation"
+output: html_notebook
+---
+
+```{r}
 library(tidyverse)
 library(timetk)
 
 source("utils.R")
+```
 
+```{r}
 HISTORICAL_DATA_PATH <- "./historical-fund-data"
 METADATA_PATH <- "./fund-metadata.csv"
+```
 
+```{r}
 START_DAY <- ymd("2005-01-01")
 END_DAY <-  ymd("2020-12-31")
+```
 
+```{r, message = FALSE}
 funds_metadata <- METADATA_PATH %>% 
     read_csv()
 
@@ -27,7 +39,9 @@ funds_old_enough <- funds_data %>%
 
 funds_data <- funds_data %>%
     filter(fund %in% funds_old_enough & date >= START_DAY & date <= END_DAY)
+```
 
+```{r}
 ggplot(funds_data, aes(x = date, y = value, color = fund)) +
     geom_line() +
     labs(
@@ -35,7 +49,9 @@ ggplot(funds_data, aes(x = date, y = value, color = fund)) +
         caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
     xlab("Time") +
     ylab("Index")
+```
 
+```{r, message = FALSE, warning = FALSE}
 funds_data_xts <- funds_data %>%
     select(-value) %>% 
     pivot_wider(names_from = fund, values_from = value_pct_change) %>% 
@@ -66,7 +82,9 @@ portfolio_comparison <- manual_portfolios_results %>%
     bind_rows() %>% 
     group_by(portfolio) %>% 
     mutate(value = cumprod(value + 1) * 100)
+```
 
+```{r}
 ggplot(portfolio_comparison, aes(x = date, y = value, color = portfolio)) +
     geom_line() +
     labs(
@@ -74,3 +92,4 @@ ggplot(portfolio_comparison, aes(x = date, y = value, color = portfolio)) +
         caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
     xlab("Time") +
     ylab("Index")
+```

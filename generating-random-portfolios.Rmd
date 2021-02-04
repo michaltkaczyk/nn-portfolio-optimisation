@@ -1,8 +1,6 @@
 ---
 title: "Generating Random Portolios"
-output:
-  html_document:
-    df_print: paged
+output: rmarkdown::github_document
 ---
 
 ```{r}

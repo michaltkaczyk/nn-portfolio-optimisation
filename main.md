@@ -1,9 +1,7 @@
----
-title: "Portfolio Optimisation for NN Investment Parners"
-output: rmarkdown::github_document
----
+Portfolio Optimisation for NN Investment Parners
+================
 
-```{r message = FALSE}
+``` r
 library(tidyverse)
 library(tidyquant)
 library(timetk)
@@ -12,17 +10,17 @@ library(lubridate)
 source("utils.R")
 ```
 
-```{r}
+``` r
 HISTORICAL_DATA_PATH <- "./historical-fund-data"
 METADATA_PATH <- "./fund-metadata.csv"
 ```
 
-```{r}
+``` r
 START_DAY <- ymd("2005-01-01")
 END_DAY <- ymd("2020-12-31")
 ```
 
-```{r, message = FALSE}
+``` r
 funds_metadata <- METADATA_PATH %>% 
     read_csv()
 
@@ -43,7 +41,7 @@ funds_data <- funds_data %>%
     filter(fund %in% funds_old_enough & date >= START_DAY & date <= END_DAY)
 ```
 
-```{r}
+``` r
 ggplot(funds_data, aes(x = date, y = value, color = fund)) +
     geom_line() +
     labs(
@@ -53,7 +51,9 @@ ggplot(funds_data, aes(x = date, y = value, color = fund)) +
     ylab("Index")
 ```
 
-```{r, message = FALSE, warning = FALSE}
+![](main_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+``` r
 funds_data_xts <- funds_data %>%
     select(-value) %>% 
     pivot_wider(names_from = fund, values_from = value_pct_change) %>% 
@@ -86,7 +86,7 @@ portfolio_comparison <- manual_portfolios_results %>%
     mutate(value = cumprod(value + 1) * 100)
 ```
 
-```{r}
+``` r
 ggplot(portfolio_comparison, aes(x = date, y = value, color = portfolio)) +
     geom_line() +
     labs(
@@ -95,3 +95,5 @@ ggplot(portfolio_comparison, aes(x = date, y = value, color = portfolio)) +
     xlab("Time") +
     ylab("Index")
 ```
+
+![](main_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->

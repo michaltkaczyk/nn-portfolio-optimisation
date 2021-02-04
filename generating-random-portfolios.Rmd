@@ -3,7 +3,7 @@ title: "Generating Random Portolios"
 output: rmarkdown::github_document
 ---
 
-```{r}
+```{r message = FALSE}
 library(tidyverse)
 
 source("utils.R")

@@ -30,22 +30,15 @@ funds_data <- HISTORICAL_DATA_PATH %>%
     left_join(funds_metadata) %>% 
     select(-fund) %>% 
     rename(fund = fund_short_name)
-
-funds_old_enough <- funds_data %>%
-    group_by(fund) %>%
-    summarise(start_day = min(date)) %>% 
-    filter(start_day <= START_DAY) %>% 
-    pull(fund)
-
-funds_data <- funds_data %>%
-    filter(fund %in% funds_old_enough & date >= START_DAY & date <= END_DAY)
 ```
+
+These are all the funds used in the analysis.
 
 ``` r
 ggplot(funds_data, aes(x = date, y = value, color = fund)) +
     geom_line() +
     labs(
-        title = paste("NN Funds Indices Between", START_DAY, "and", END_DAY),
+        title = "NN Funds - All Available Funds",
         caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
     xlab("Time") +
     ylab("Index")
@@ -53,12 +46,87 @@ ggplot(funds_data, aes(x = date, y = value, color = fund)) +
 
 ![](main_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-``` r
-funds_data_xts <- funds_data %>%
-    select(-value) %>% 
-    pivot_wider(names_from = fund, values_from = value_pct_change) %>% 
-    tk_xts()
+Let’s do some data processing here.
 
+First of all, let’s drop all founds that are not fully contained within
+a specified time period.
+
+``` r
+funds_old_enough <- funds_data %>%
+    group_by(fund) %>%
+    summarise(start_day = min(date)) %>%
+    filter(start_day <= START_DAY) %>% 
+    pull(fund)
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
+funds_data <- funds_data %>%
+    filter(fund %in% funds_old_enough & date >= START_DAY & date <= END_DAY)
+```
+
+Now, let’s change the format to `xts`, for convenience of calculations
+later on. In the meantime, I am replacing all `NA` values with zeros, so
+that they are not dropped in the next step.
+
+``` r
+funds_data <- funds_data %>%
+    pivot_wider(names_from = fund, values_from = value) %>% 
+    tk_xts()
+```
+
+    ## Warning: Non-numeric columns being dropped: date
+
+    ## Using column `date` for date_var.
+
+The next step is to change the granularity from daily to monthly. This
+should be enough for my purposes.
+
+``` r
+funds_data <- funds_data %>% 
+    to.monthly(indexAt = "yearmon", OHLC = FALSE)
+```
+
+Finally let’s change the absolute values to monthly rates of change.
+
+``` r
+funds_data <- funds_data %>% 
+    ROC()
+```
+
+Let’s see where we got after all of those manipulations.
+
+``` r
+funds_data_dates <- funds_data %>% 
+    index() %>% 
+    as_tibble() %>% 
+    rename(date = value)
+
+funds_data_long <- funds_data %>%
+    as_tibble() %>%
+    add_column(funds_data_dates) %>% 
+    pivot_longer(!date, "fund") %>%
+    replace_na(list(value = 0)) %>% 
+    group_by(fund) %>% 
+    arrange(date) %>% 
+    mutate(value = cumprod(value + 1)) %>% 
+    ungroup()
+
+ggplot(funds_data_long, aes(x = date, y = value, color = fund)) +
+    geom_line() +
+    labs(
+        title = "NN Funds - All Available Funds",
+        caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
+    xlab("Time") +
+    ylab("Index")
+```
+
+![](main_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+Let’s check some manually created portfolios’ performance.
+
+``` r
 manual_portfolios <- rbind(
     c(1, 0, 0, 0, 0),
     c(1, 1, 0, 0, 0),
@@ -73,9 +141,9 @@ manual_portfolios_results <- list()
 
 for (portfolio in 1:NROW(manual_portfolios)) {
     manual_portfolios_results[[portfolio]] <- 
-        Return.portfolio(funds_data_xts, manual_portfolios[portfolio, ]) %>%
+        Return.portfolio(funds_data, manual_portfolios[portfolio, ]) %>%
         as_tibble() %>% 
-        add_column(date = index(funds_data_xts)) %>% 
+        add_column(date = index(funds_data)) %>% 
         mutate(portfolio = paste("portfolio", portfolio)) %>% 
         rename(value = portfolio.returns)
 }
@@ -96,4 +164,4 @@ ggplot(portfolio_comparison, aes(x = date, y = value, color = portfolio)) +
     ylab("Index")
 ```
 
-![](main_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](main_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->

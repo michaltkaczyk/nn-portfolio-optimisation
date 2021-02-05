@@ -188,3 +188,25 @@ ggplot(random_portfolio_comparison, aes(x = date, y = value, group = portfolio))
     xlab("Time") +
     ylab("Index")
 ```
+
+```{r}
+funds_data_cov <- funds_data %>% cov(use = "na.or.complete")
+funds_data_avg <- funds_data %>% apply(2, mean, na.rm = TRUE)
+
+random_portfolios_results_avg <- matrix(nrow = NROW(random_portfolios), ncol = 2)
+colnames(random_portfolios_results_avg) <- c("return", "risk")
+
+for (portfolio in 1:NROW(random_portfolios)){
+    random_portfolios_results_avg[portfolio, 1] <- sum(random_portfolios[portfolio, ] * funds_data_avg) * sqrt(12) * 100
+    random_portfolios_results_avg[portfolio, 2] <- as.numeric(sqrt(random_portfolios[portfolio, ] %*% funds_data_cov %*% random_portfolios[portfolio, ])) * 12 * 100
+}
+
+random_portfolios_results_avg <-
+    random_portfolios_results_avg %>%
+    as_tibble() %>% 
+    bind_cols(random_portfolios)
+
+random_portfolios_results_avg %>%
+    ggplot(aes(risk, return)) +
+    geom_point()
+```

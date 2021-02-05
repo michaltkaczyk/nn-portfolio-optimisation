@@ -151,3 +151,40 @@ ggplot(portfolio_comparison, aes(x = date, y = value, color = portfolio)) +
     xlab("Time") +
     ylab("Index")
 ```
+
+What if we tried randomly generating the portfolios?
+
+```{r}
+n_portfolios <- 100
+
+random_portfolios <-
+    n_portfolios %>%
+    replicate(generate_random_portfolio_weights(5)) %>% 
+    t()
+
+random_portfolios_results <- list()
+
+for (portfolio in 1:NROW(random_portfolios)) {
+    random_portfolios_results[[portfolio]] <- 
+        Return.portfolio(funds_data, random_portfolios[portfolio, ]) %>%
+        as_tibble() %>% 
+        add_column(date = index(funds_data)) %>% 
+        mutate(portfolio = paste("portfolio", portfolio)) %>% 
+        rename(value = portfolio.returns)
+}
+
+random_portfolio_comparison <- random_portfolios_results %>%
+    bind_rows() %>% 
+    group_by(portfolio) %>% 
+    mutate(value = cumprod(value + 1) * 100)
+```
+
+```{r}
+ggplot(random_portfolio_comparison, aes(x = date, y = value, group = portfolio)) +
+    geom_line(alpha = 0.05) +
+    labs(
+        title = paste("Performance of Randomly Selected Portfolios Between", START_DAY, "and", END_DAY),
+        caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
+    xlab("Time") +
+    ylab("Index")
+```

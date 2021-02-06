@@ -28,8 +28,7 @@ funds_data <- HISTORICAL_DATA_PATH %>%
     list_nn_funds() %>% 
     bind_rows() %>% 
     left_join(funds_metadata) %>% 
-    select(-fund) %>% 
-    rename(fund = fund_short_name)
+    select(date, fund = fund_short_name, value)
 ```
 
 These are all the funds used in the analysis.
@@ -59,11 +58,7 @@ funds_old_enough <- funds_data %>%
     summarise(start_day = min(date)) %>%
     filter(start_day <= START_DAY) %>% 
     pull(fund)
-```
 
-    ## `summarise()` ungrouping output (override with `.groups` argument)
-
-``` r
 funds_data <- funds_data %>%
     filter(fund %in% funds_old_enough & date >= START_DAY & date <= END_DAY)
 ```
@@ -75,12 +70,8 @@ that they are not dropped in the next step.
 ``` r
 funds_data <- funds_data %>%
     pivot_wider(names_from = fund, values_from = value) %>% 
-    tk_xts()
+    tk_xts(select = -date, date_var = date)
 ```
-
-    ## Warning: Non-numeric columns being dropped: date
-
-    ## Using column `date` for date_var.
 
 The next step is to change the granularity from daily to monthly. This
 should be enough for my purposes.
@@ -94,7 +85,7 @@ Finally let’s change the absolute values to monthly rates of change.
 
 ``` r
 funds_data <- funds_data %>% 
-    ROC()
+    ROC(na.pad = FALSE)
 ```
 
 Let’s see where we got after all of those manipulations.
@@ -109,7 +100,6 @@ funds_data_long <- funds_data %>%
     as_tibble() %>%
     add_column(funds_data_dates) %>% 
     pivot_longer(!date, "fund") %>%
-    replace_na(list(value = 0)) %>% 
     group_by(fund) %>% 
     arrange(date) %>% 
     mutate(value = cumprod(value + 1)) %>% 
@@ -171,21 +161,18 @@ ggplot(portfolio_comparison, aes(x = date, y = value, color = portfolio)) +
 ```
 
 ![](main_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
 
 What if we tried randomly generating the portfolios?
 
 ``` r
-n_portfolios <- 100
+n_portfolios <- 1000
 
 random_portfolios <-
     n_portfolios %>%
     replicate(generate_random_portfolio_weights(5)) %>% 
     t()
+
+colnames(random_portfolios) <- colnames(funds_data)
 
 random_portfolios_results <- list()
 
@@ -197,309 +184,7 @@ for (portfolio in 1:NROW(random_portfolios)) {
         mutate(portfolio = paste("portfolio", portfolio)) %>% 
         rename(value = portfolio.returns)
 }
-```
 
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-    
-    ## Warning in Return.portfolio(funds_data, random_portfolios[portfolio, ]): NA's
-    ## detected: filling NA's with zeros
-
-``` r
 random_portfolio_comparison <- random_portfolios_results %>%
     bind_rows() %>% 
     group_by(portfolio) %>% 
@@ -507,18 +192,14 @@ random_portfolio_comparison <- random_portfolios_results %>%
 ```
 
 ``` r
-ggplot(random_portfolio_comparison, aes(x = date, y = value, group = portfolio)) +
-    geom_line(alpha = 0.05) +
+ggplot(random_portfolio_comparison) +
+    geom_line(aes(x = date, y = value, group = portfolio), alpha = 0.05) +
     labs(
-<<<<<<< Updated upstream
-        title = paste("Performance of Randomly Selected Portfolios Between", START_DAY, "and", END_DAY),
-        caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
-=======
         title = "Performance of Randomly Selected NN Portfolios",
         subtitle = paste("Between", START_DAY, "and", END_DAY),
         caption = "Source: NN Investment Partners, michaltkaczyk's estimations",
         color = "Portfolio") +
->>>>>>> Stashed changes
+    stat_summary(aes(x = date, y = value), fun = mean, geom = "line", color = "#F8766D", size = 1) +
     xlab("Time") +
     ylab("Index")
 ```
@@ -533,37 +214,24 @@ random_portfolios_results_avg <- matrix(nrow = NROW(random_portfolios), ncol = 2
 colnames(random_portfolios_results_avg) <- c("return", "risk")
 
 for (portfolio in 1:NROW(random_portfolios)){
-    random_portfolios_results_avg[portfolio, 1] <- sum(random_portfolios[portfolio, ] * funds_data_avg) * sqrt(12) * 100
-    random_portfolios_results_avg[portfolio, 2] <- as.numeric(sqrt(random_portfolios[portfolio, ] %*% funds_data_cov %*% random_portfolios[portfolio, ])) * 12 * 100
+    random_portfolios_results_avg[portfolio, 1] <- ((1 + sum(random_portfolios[portfolio, ] * funds_data_avg)) ^ 12) - 1
+    random_portfolios_results_avg[portfolio, 2] <- as.numeric(sqrt(random_portfolios[portfolio, ] %*% funds_data_cov %*% random_portfolios[portfolio, ])) * 12
 }
 
 random_portfolios_results_avg <-
-    random_portfolios_results_avg %>%
-    as_tibble() %>% 
-    bind_cols(random_portfolios)
-```
+    bind_cols(
+        as_tibble(random_portfolios_results_avg),
+        as_tibble(random_portfolios))
 
-    ## New names:
-    ## * NA -> ...3
-
-``` r
-<<<<<<< Updated upstream
-random_portfolios_results_avg %>%
-    ggplot(aes(risk, return)) +
-    geom_point()
-```
-
-![](main_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
-=======
 ggplot(random_portfolios_results_avg, aes(x = risk, y = return)) +
     geom_point() +
     labs(
         title = "Average Performance of Randomly Selected NN Portfolios",
         caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
     xlab("Risk") +
-    ylab("Return")
+    ylab("Return") +
+    scale_x_continuous(labels = scales::percent) +
+    scale_y_continuous(labels = scales::percent)
 ```
 
 ![](main_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
->>>>>>> Stashed changes
->>>>>>> Stashed changes

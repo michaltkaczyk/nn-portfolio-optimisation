@@ -157,11 +157,6 @@ ggplot(portfolio_comparison, aes(x = date, y = value, color = portfolio)) +
     xlab("Time") +
     ylab("Index")
 ```
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
 
 What if we tried randomly generating the portfolios?
 
@@ -194,15 +189,10 @@ random_portfolio_comparison <- random_portfolios_results %>%
 ggplot(random_portfolio_comparison, aes(x = date, y = value, group = portfolio)) +
     geom_line(alpha = 0.05) +
     labs(
-<<<<<<< Updated upstream
-        title = paste("Performance of Randomly Selected Portfolios Between", START_DAY, "and", END_DAY),
-        caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
-=======
         title = "Performance of Randomly Selected NN Portfolios",
         subtitle = paste("Between", START_DAY, "and", END_DAY),
         caption = "Source: NN Investment Partners, michaltkaczyk's estimations",
         color = "Portfolio") +
->>>>>>> Stashed changes
     xlab("Time") +
     ylab("Index")
 ```
@@ -224,12 +214,6 @@ random_portfolios_results_avg <-
     as_tibble() %>% 
     bind_cols(random_portfolios)
 
-<<<<<<< Updated upstream
-random_portfolios_results_avg %>%
-    ggplot(aes(risk, return)) +
-    geom_point()
-```
-=======
 ggplot(random_portfolios_results_avg, aes(x = risk, y = return)) +
     geom_point() +
     labs(
@@ -238,5 +222,3 @@ ggplot(random_portfolios_results_avg, aes(x = risk, y = return)) +
     xlab("Risk") +
     ylab("Return")
 ```
->>>>>>> Stashed changes
->>>>>>> Stashed changes

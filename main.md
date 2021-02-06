@@ -38,8 +38,10 @@ These are all the funds used in the analysis.
 ggplot(funds_data, aes(x = date, y = value, color = fund)) +
     geom_line() +
     labs(
-        title = "NN Funds - All Available Funds",
-        caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
+        title = "NN Funds",
+        subtitle = "All Available Funds",
+        caption = "Source: NN Investment Partners, michaltkaczyk's estimations",
+        color = "Fund") +
     xlab("Time") +
     ylab("Index")
 ```
@@ -116,8 +118,10 @@ funds_data_long <- funds_data %>%
 ggplot(funds_data_long, aes(x = date, y = value, color = fund)) +
     geom_line() +
     labs(
-        title = "NN Funds - All Available Funds",
-        caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
+        title = "NN Funds",
+        subtitle = "All Available Funds",
+        caption = "Source: NN Investment Partners, michaltkaczyk's estimations",
+        color = "Fund") +
     xlab("Time") +
     ylab("Index")
 ```
@@ -158,13 +162,20 @@ portfolio_comparison <- manual_portfolios_results %>%
 ggplot(portfolio_comparison, aes(x = date, y = value, color = portfolio)) +
     geom_line() +
     labs(
-        title = paste("Performance of Manually Selected Portfolios Between", START_DAY, "and", END_DAY),
-        caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
+        title = "Performance of Manually Selected NN Portfolios",
+        subtitle = paste("Between", START_DAY, "and", END_DAY),
+        caption = "Source: NN Investment Partners, michaltkaczyk's estimations",
+        color = "Portfolio") +
     xlab("Time") +
     ylab("Index")
 ```
 
 ![](main_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
 
 What if we tried randomly generating the portfolios?
 
@@ -499,8 +510,15 @@ random_portfolio_comparison <- random_portfolios_results %>%
 ggplot(random_portfolio_comparison, aes(x = date, y = value, group = portfolio)) +
     geom_line(alpha = 0.05) +
     labs(
+<<<<<<< Updated upstream
         title = paste("Performance of Randomly Selected Portfolios Between", START_DAY, "and", END_DAY),
         caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
+=======
+        title = "Performance of Randomly Selected NN Portfolios",
+        subtitle = paste("Between", START_DAY, "and", END_DAY),
+        caption = "Source: NN Investment Partners, michaltkaczyk's estimations",
+        color = "Portfolio") +
+>>>>>>> Stashed changes
     xlab("Time") +
     ylab("Index")
 ```
@@ -529,9 +547,23 @@ random_portfolios_results_avg <-
     ## * NA -> ...3
 
 ``` r
+<<<<<<< Updated upstream
 random_portfolios_results_avg %>%
     ggplot(aes(risk, return)) +
     geom_point()
 ```
 
 ![](main_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+=======
+ggplot(random_portfolios_results_avg, aes(x = risk, y = return)) +
+    geom_point() +
+    labs(
+        title = "Average Performance of Randomly Selected NN Portfolios",
+        caption = "Source: NN Investment Partners, michaltkaczyk's estimations") +
+    xlab("Risk") +
+    ylab("Return")
+```
+
+![](main_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes

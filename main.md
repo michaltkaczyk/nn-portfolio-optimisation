@@ -91,14 +91,8 @@ funds_data <- funds_data %>%
 Let’s see where we got after all of those manipulations.
 
 ``` r
-funds_data_dates <- funds_data %>% 
-    index() %>% 
-    as_tibble() %>% 
-    rename(date = value)
-
 funds_data_long <- funds_data %>%
-    as_tibble() %>%
-    add_column(funds_data_dates) %>% 
+    tk_tbl(rename_index = "date") %>% 
     pivot_longer(!date, "fund") %>%
     group_by(fund) %>% 
     arrange(date) %>% 
@@ -116,83 +110,37 @@ ggplot(funds_data_long, aes(x = date, y = value, color = fund)) +
     ylab("Index")
 ```
 
-![](main_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
-
-Let’s check some manually created portfolios’ performance.
+![](main_files/figure-gfm/unnamed-chunk-10-1.png)<!-- --> Let’s try
+randomly generating the portfolios.
 
 ``` r
-manual_portfolios <- rbind(
-    c(1, 0, 0, 0, 0),
-    c(1, 1, 0, 0, 0),
-    c(1, 0, 1, 0, 0),
-    c(1, 0, 0, 1, 0),
-    c(1, 0, 0, 0, 1),
-    c(1, 1, 1, 1, 1)) %>% 
-    apply(1, function(x) x / sum(x)) %>% 
+N_PORTFOLIOS <- 1000
+
+random_portfolios_weights <-
+    N_PORTFOLIOS %>%
+    replicate(generate_random_portfolio_weights(NCOL(funds_data))) %>% 
     t()
 
-manual_portfolios_results <- list()
+colnames(random_portfolios_weights) <- colnames(funds_data)
 
-for (portfolio in 1:NROW(manual_portfolios)) {
-    manual_portfolios_results[[portfolio]] <- 
-        Return.portfolio(funds_data, manual_portfolios[portfolio, ]) %>%
-        as_tibble() %>% 
-        add_column(date = index(funds_data)) %>% 
-        mutate(portfolio = paste("portfolio", portfolio)) %>% 
-        rename(value = portfolio.returns)
+random_portfolios_results_list <- list()
+
+for (portfolio in 1:N_PORTFOLIOS) {
+    random_portfolios_results_list[[portfolio]] <- 
+        Return.portfolio(funds_data, random_portfolios_weights[portfolio, ]) %>%
+        tk_tbl(rename_index = "date") %>% 
+        mutate(
+            value = cumprod(portfolio.returns + 1) * 100,
+            portfolio = paste("portfolio", portfolio)) %>% 
+        select(-portfolio.returns)
 }
 
-portfolio_comparison <- manual_portfolios_results %>%
-    bind_rows() %>% 
-    group_by(portfolio) %>% 
-    mutate(value = cumprod(value + 1) * 100)
+random_portfolios_results <- random_portfolios_results_list %>%
+    bind_rows()
 ```
 
 ``` r
-ggplot(portfolio_comparison, aes(x = date, y = value, color = portfolio)) +
-    geom_line() +
-    labs(
-        title = "Performance of Manually Selected NN Portfolios",
-        subtitle = paste("Between", START_DAY, "and", END_DAY),
-        caption = "Source: NN Investment Partners, michaltkaczyk's estimations",
-        color = "Portfolio") +
-    xlab("Time") +
-    ylab("Index")
-```
-
-![](main_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
-
-What if we tried randomly generating the portfolios?
-
-``` r
-n_portfolios <- 1000
-
-random_portfolios <-
-    n_portfolios %>%
-    replicate(generate_random_portfolio_weights(5)) %>% 
-    t()
-
-colnames(random_portfolios) <- colnames(funds_data)
-
-random_portfolios_results <- list()
-
-for (portfolio in 1:NROW(random_portfolios)) {
-    random_portfolios_results[[portfolio]] <- 
-        Return.portfolio(funds_data, random_portfolios[portfolio, ]) %>%
-        as_tibble() %>% 
-        add_column(date = index(funds_data)) %>% 
-        mutate(portfolio = paste("portfolio", portfolio)) %>% 
-        rename(value = portfolio.returns)
-}
-
-random_portfolio_comparison <- random_portfolios_results %>%
-    bind_rows() %>% 
-    group_by(portfolio) %>% 
-    mutate(value = cumprod(value + 1) * 100)
-```
-
-``` r
-ggplot(random_portfolio_comparison) +
+p1 <- ggplot(random_portfolios_results) +
     geom_line(aes(x = date, y = value, group = portfolio), alpha = 0.05) +
     labs(
         title = "Performance of Randomly Selected NN Portfolios",
@@ -202,28 +150,31 @@ ggplot(random_portfolio_comparison) +
     stat_summary(aes(x = date, y = value), fun = mean, geom = "line", color = "#F8766D", size = 1) +
     xlab("Time") +
     ylab("Index")
+
+p1
 ```
 
-![](main_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](main_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ``` r
-funds_data_cov <- funds_data %>% cov(use = "na.or.complete")
-funds_data_avg <- funds_data %>% apply(2, mean, na.rm = TRUE)
+funds_expected_returns_vector <- (1 + apply(funds_data, 2, mean, na.rm = TRUE)) ^ 12 - 1
+funds_covariance_matrix <- cov(funds_data, use = "na.or.complete") * 12
 
-random_portfolios_results_avg <- matrix(nrow = NROW(random_portfolios), ncol = 2)
-colnames(random_portfolios_results_avg) <- c("return", "risk")
+random_portfolios_averages <- random_portfolios_weights %>% 
+    as_tibble() %>% 
+    add_column(risk = 0, return = 0)
 
-for (portfolio in 1:NROW(random_portfolios)){
-    random_portfolios_results_avg[portfolio, 1] <- ((1 + sum(random_portfolios[portfolio, ] * funds_data_avg)) ^ 12) - 1
-    random_portfolios_results_avg[portfolio, 2] <- as.numeric(sqrt(random_portfolios[portfolio, ] %*% funds_data_cov %*% random_portfolios[portfolio, ])) * 12
+for (portfolio in 1:N_PORTFOLIOS) {
+    funds_weights <- random_portfolios_weights[portfolio, ]
+    
+    random_portfolios_averages[portfolio, "return"] <-
+        sum(funds_expected_returns_vector * funds_weights)
+    
+    random_portfolios_averages[portfolio, "risk"] <-
+        as.numeric(sqrt(funds_weights %*% funds_covariance_matrix %*% funds_weights))
 }
 
-random_portfolios_results_avg <-
-    bind_cols(
-        as_tibble(random_portfolios_results_avg),
-        as_tibble(random_portfolios))
-
-ggplot(random_portfolios_results_avg, aes(x = risk, y = return)) +
+p2 <- ggplot(random_portfolios_averages, aes(x = risk, y = return)) +
     geom_point() +
     labs(
         title = "Average Performance of Randomly Selected NN Portfolios",
@@ -232,6 +183,34 @@ ggplot(random_portfolios_results_avg, aes(x = risk, y = return)) +
     ylab("Return") +
     scale_x_continuous(labels = scales::percent) +
     scale_y_continuous(labels = scales::percent)
+
+p2
 ```
 
-![](main_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](main_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+Let’s try this portfolio:
+
+``` r
+selected_portfolio_weights <- c(.1, 0, .7, .1, .1)
+
+selected_portfolio_results <- Return.portfolio(funds_data, selected_portfolio_weights) %>% 
+    tk_tbl(rename_index = "date") %>% 
+    mutate(
+        value = cumprod(portfolio.returns + 1) * 100,
+        portfolio = "selected") %>% 
+    select(-portfolio.returns)
+
+selected_portfolio_return <- sum(funds_expected_returns_vector * selected_portfolio_weights)
+selected_portfolio_risk <- as.numeric(sqrt(selected_portfolio_weights %*% funds_covariance_matrix %*% selected_portfolio_weights))
+
+p1 + stat_summary(data = selected_portfolio_results, aes(x = date, y = value), fun = mean, geom = "line", color = "green", size = 1)
+```
+
+![](main_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+``` r
+p2 + geom_point(aes(y = selected_portfolio_return, x = selected_portfolio_risk), colour = "green")
+```
+
+![](main_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->

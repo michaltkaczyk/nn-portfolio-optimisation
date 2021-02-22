@@ -1,6 +1,7 @@
 read_nn_csv <- function(file) {
     file %>% 
-        read_csv() %>% 
+        read_csv(
+           col_types = cols()) %>% 
         rename(date = Data) %>% 
         select(-Waluta) %>% 
         pivot_longer(!date, "fund")
